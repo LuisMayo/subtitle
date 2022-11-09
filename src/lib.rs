@@ -2,6 +2,7 @@ mod config;
 pub mod error;
 mod opensubs;
 mod utils;
+pub mod arguments;
 
 use clap::ArgMatches;
 use colored::Colorize;
