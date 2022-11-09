@@ -116,7 +116,7 @@ fn download_subtitle(link: &str, fname: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn use_opensubs(files: clap::Values, lang: &str, token: &str) -> Result<()> {
+pub fn use_opensubs(files: Vec<&str>, lang: &str, token: &str) -> Result<String> {
     match get_user_info(token) {
         Ok(user_info) => {
             println!(
@@ -143,7 +143,7 @@ pub fn use_opensubs(files: clap::Values, lang: &str, token: &str) -> Result<()> 
                     }
                     Err(err) => {
                         println!("{} {:#?}", "[!] Error: ".red().bold(), err);
-                        return Ok(());
+                        return Err(err);
                     }
                 }
             } else {
@@ -153,12 +153,11 @@ pub fn use_opensubs(files: clap::Values, lang: &str, token: &str) -> Result<()> 
                         .red()
                         .bold()
                 );
-                return Ok(());
+                return Ok("".to_string());
             }
         }
     }
 
-    let files: Vec<&str> = files.collect();
     if files.len() > 0 {
         for file in files.iter() {
             println!("{} {}", "Generating hash for".green(), file);
@@ -183,14 +182,15 @@ pub fn use_opensubs(files: clap::Values, lang: &str, token: &str) -> Result<()> 
                 let ext = Path::new(file).extension().unwrap().to_str().unwrap();
                 let fname = file.replace(ext, "srt");
 
-                download_subtitle(&link, &fname)?
+                download_subtitle(&link, &fname)?;
+                return Ok(fname);
             } else {
                 println!("{}", "[!] Could not find suitable subtitle.".red().bold());
             }
         }
     }
 
-    Ok(())
+    return Ok("".to_string());
 }
 
 const HASH_BLK_SIZE: u64 = 65536;

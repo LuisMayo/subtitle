@@ -1,10 +1,10 @@
+pub mod arguments;
 mod config;
 pub mod error;
 mod opensubs;
 mod utils;
-pub mod arguments;
 
-use clap::ArgMatches;
+use arguments::Arguments;
 use colored::Colorize;
 use config::Config;
 use dialoguer::{Confirm, Input, Password};
@@ -12,13 +12,13 @@ use error::{Error, Result};
 use opensubs::{get_os_token, use_opensubs};
 use std::fs;
 
-pub fn run(matches: ArgMatches) -> Result<()> {
+pub fn run(matches: Arguments) -> Result<String> {
     let config = Config::new()?;
 
     let mut current_lang: &str = &config.lang;
     let os_token: &str = &config.os_token;
 
-    if let Some(lang) = matches.value_of("lang") {
+    if let Some(lang) = matches.lang {
         current_lang = lang;
     }
 
@@ -28,22 +28,19 @@ pub fn run(matches: ArgMatches) -> Result<()> {
         current_lang.to_uppercase()
     );
 
-    match matches.values_of("file") {
-        Some(files) => {
-            if os_token.len() > 0 {
-                use_opensubs(files, current_lang, os_token)?
-            } else {
-                println!("{}", "[!] No OpenSubtitles token found.".red().bold());
-                authenticate_os_user()?;
-                use_opensubs(files, current_lang, os_token)?
-            }
+    if matches.path.len() > 0 {
+        if os_token.len() > 0 {
+            return use_opensubs(matches.path, current_lang, os_token);
+        } else {
+            println!("{}", "[!] No OpenSubtitles token found.".red().bold());
+            authenticate_os_user()?;
+            return use_opensubs(matches.path, current_lang, os_token);
         }
-        None => {
-            println!("{}", "[!] No files provided.".red().bold());
-        }
+    } else {
+        println!("{}", "[!] No files provided.".red().bold());
     }
 
-    Ok(())
+    return Ok("".to_string());
 }
 
 pub fn authenticate_os_user() -> Result<()> {
